@@ -31,7 +31,7 @@ class StoreConflict(Exception):
 
 class Store:
     def __init__(self, path: str | Path = ":memory:"):
-        self.db = sqlite3.connect(str(path))
+        self.db = sqlite3.connect(str(path), check_same_thread=False)
         self.db.executescript(SCHEMA)
         self.db.execute("INSERT OR IGNORE INTO meta VALUES('version', 0)")
         self.db.commit()
