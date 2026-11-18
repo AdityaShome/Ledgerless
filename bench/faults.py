@@ -18,6 +18,7 @@ class FaultPlan:
     forge_receipt: bool = False  # F7
     partition_resolves: int = 0  # F6: first N resolveIntent calls unreachable
     p_replan: float = 0.0  # F5 knob
+    abort_upstream: bool = False  # F8: root aborts after downstream effects committed
 
 
 @dataclass

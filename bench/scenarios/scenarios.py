@@ -16,6 +16,7 @@ SCENARIOS: dict[str, FaultPlan] = {
     "F6_partition_transient": FaultPlan(drop_response=True, partition_resolves=2),
     "F6_partition_permanent": FaultPlan(drop_response=True, partition_resolves=10**6),
     "F7_forged_receipt": FaultPlan(forge_receipt=True),
+    "F8_upstream_abort": FaultPlan(abort_upstream=True),
 }
 
 
