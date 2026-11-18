@@ -22,9 +22,9 @@
         "temporal_bridge"
       ]
     },
-    "git_commit": "789ae2b60d6e729f2e2fb2b78860579d327933a2",
-    "git_dirty": true,
-    "seconds": 15.5
+    "git_commit": "7a26ae79d9cd237490b17dc5c009bed5043557aa",
+    "git_dirty": false,
+    "seconds": 13.9
   },
   "grid.csv": {
     "config": {
@@ -67,9 +67,9 @@
         "temporal_bridge"
       ]
     },
-    "git_commit": "789ae2b60d6e729f2e2fb2b78860579d327933a2",
-    "git_dirty": true,
-    "seconds": 670.2
+    "git_commit": "7a26ae79d9cd237490b17dc5c009bed5043557aa",
+    "git_dirty": false,
+    "seconds": 521.5
   },
   "rq4_granularity.csv": {
     "config": {
@@ -83,8 +83,8 @@
       ],
       "seeds": "0..99"
     },
-    "git_commit": "789ae2b60d6e729f2e2fb2b78860579d327933a2",
-    "git_dirty": true,
-    "seconds": 18.7
+    "git_commit": "7a26ae79d9cd237490b17dc5c009bed5043557aa",
+    "git_dirty": false,
+    "seconds": 13.9
   }
 }

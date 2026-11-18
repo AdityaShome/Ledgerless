@@ -75,5 +75,3 @@ No bound was fixed before running, so none is claimed.
 - The crash-enabled TLC run did not finish; safety and liveness were checked only without
   crashes (`formal/results.md`).
 - Persisted plans do not help if the delegator crashes before saving the plan.
-- Results were generated from a working tree with uncommitted runner code; see `git_dirty` in
-  the manifest. Regenerate after committing for a clean provenance hash.
