@@ -158,3 +158,25 @@ def test_rq4_tradeoff_shape():
     assert coarse_f > under_f > 0 and coarse_m == under_m == 0
     assert right_f == 0 and right_m == 0
     assert fine_f == 0 and fine_m == 1.0
+
+
+# ---- D29: persisted downstream plans close the re-delegation leak -------------------------
+
+
+def test_persisted_plan_closes_fine_digest_leak():
+    f5 = "F5_replan_on_replay"
+    assert tot("ours_fine", f5)["dup"] > 0  # weakness stays documented
+    for s in ("ours_fine_persist", "ours_medium_persist"):
+        t = tot(s, f5)
+        assert t["dup"] == 0 and t["done"] == t["n"]
+
+
+def test_persisted_plan_has_a_measured_cost_and_is_reloaded_from_store():
+    r = run_system("ours_fine_persist", "F0", SCENARIOS["F0_clean"], 1)
+    assert r.plan_bytes > 0
+    assert run_system("ours", "F0", SCENARIOS["F0_clean"], 1).plan_bytes == 0
+    from recovery.store import Store
+
+    s = Store()
+    first = s.put_plan("c", "h1", {"a": 1})
+    assert s.put_plan("c", "h1", {"a": 2}) == first == {"a": 1}  # first write wins

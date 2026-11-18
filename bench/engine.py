@@ -35,6 +35,7 @@ class SystemConfig:
     quarantine_in_doubt: bool = False  # on timeout, quarantine instead of retry/resolve
     compensate: str = "none"  # none | receipts (evidence-based) | history (central log)
     events_per_call: int = 0  # modelled control-plane messages per call (Temporal history)
+    persist_plan: bool = False  # D29: persist the planned downstream request, re-drive reuses it
 
 
 DEFAULT_SDK = SystemConfig("default_sdk")
@@ -79,6 +80,14 @@ def digest_only(level: Granularity) -> SystemConfig:
 def ours_at(level: Granularity) -> SystemConfig:
     return dataclasses.replace(OURS, name=f"ours_{level.value}", granularity=level)
 
+
+def ours_persist(level: Granularity) -> SystemConfig:
+    """Ours plus persisted downstream plans (D29)."""
+    return dataclasses.replace(
+        OURS, name=f"ours_{level.value}_persist", granularity=level, persist_plan=True
+    )
+
+
 POLICY = DigestPolicy(medium_keys=("amount",))
 
 
@@ -111,6 +120,7 @@ class RunResult:
     aborted: bool = False
     residual: int = 0
     compensations: int = 0
+    plan_bytes: int = 0  # extra durable bytes for persisted plans (D29)
 
     def to_dict(self) -> dict:
         return dataclasses.asdict(self)
@@ -227,6 +237,8 @@ class World:
         self.compensations = 0
         self.aborted = False
         self.global_store = Store()
+        self.plan_store = Store()  # durable delegator-side state, used only if persist_plan
+        self.plan_bytes = 0
 
     # -- topology: a chain of `depth` hops; fanout > 1 gives the root `fanout` branches
     def _build(self, depth: int, fanout: int) -> None:
@@ -336,7 +348,7 @@ class World:
     def call(self, hop: Hop, parent_hash: str | None) -> Response:
         """Caller-side logic for one downstream hop, including retries."""
         cfg, spec = self.cfg, hop.spec
-        req = self.agent.next(self.chain_id, spec)
+        req = self._plan(spec)
         for attempt in range(cfg.max_retries + 1):
             intent = self._intent(req, parent_hash)
             resp = self._net(hop, req, intent, attempt)
@@ -360,15 +372,30 @@ class World:
                 if act is Action.RESUME:
                     req = self.agent.original(self.chain_id, spec)
                 elif act is Action.REPLAY:
-                    req = self.agent.replay(self.chain_id, spec)
+                    if not cfg.persist_plan:
+                        req = self.agent.replay(self.chain_id, spec)
                 else:  # QUARANTINE / QUARANTINE_ALERT
                     self.quarantined = True
                     if act is Action.QUARANTINE_ALERT:
                         self.alerts += 1
                     return Response(False, status="quarantine")
-            else:
+            elif not cfg.persist_plan:
                 req = self.agent.replay(self.chain_id, spec)
         return Response(False, status="gave_up")
+
+    def _plan(self, spec: HopSpec) -> PlannedRequest:
+        """Plan a delegation. With persist_plan the first plan is stored durably and every
+        later re-drive of this slot reuses it verbatim instead of re-planning (D29)."""
+        if not self.cfg.persist_plan:
+            return self.agent.next(self.chain_id, spec)
+        saved = self.plan_store.get_plan(self.chain_id, spec.name)
+        if saved is None:
+            req = self.agent.next(self.chain_id, spec)
+            saved = self.plan_store.put_plan(
+                self.chain_id, spec.name, {"req_id": req.req_id, "hop": req.hop, "params": req.params}
+            )
+            self.plan_bytes += len(json.dumps(saved))
+        return PlannedRequest(saved["req_id"], saved["hop"], saved["params"])
 
     # -- upstream abort (F8): compensate committed effects according to the system's evidence
     def _compensate(self, hop: Hop) -> None:
@@ -424,6 +451,7 @@ class World:
             aborted=self.aborted,
             residual=sum(h.tool.residual() for h in hops) if self.aborted else 0,
             compensations=self.compensations,
+            plan_bytes=self.plan_bytes,
         )
 
     def run(self) -> RunResult:

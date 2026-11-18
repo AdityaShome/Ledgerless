@@ -21,6 +21,7 @@ CREATE TABLE IF NOT EXISTS intents(
   intent_id TEXT PRIMARY KEY, chain_id TEXT, digest TEXT, body TEXT, version INTEGER);
 CREATE TABLE IF NOT EXISTS receipts(
   intent_id TEXT PRIMARY KEY, chain_id TEXT, digest TEXT, status TEXT, body TEXT, version INTEGER);
+CREATE TABLE IF NOT EXISTS plans(chain_id TEXT, slot TEXT, body TEXT, PRIMARY KEY(chain_id, slot));
 CREATE INDEX IF NOT EXISTS receipts_digest ON receipts(chain_id, digest, status);
 """
 
@@ -62,6 +63,21 @@ class Store:
     def get_intent(self, intent_id: str) -> Intent | None:
         row = self.db.execute("SELECT body FROM intents WHERE intent_id=?", (intent_id,)).fetchone()
         return Intent.from_dict(json.loads(row[0])) if row else None
+
+    # -- persisted downstream plans (D29): first write wins, so a re-drive reuses the same request
+    def put_plan(self, chain_id: str, slot: str, plan: dict) -> dict:
+        """Persist the planned downstream request for a slot; return the stored (first) plan."""
+        self.db.execute(
+            "INSERT OR IGNORE INTO plans VALUES(?,?,?)", (chain_id, slot, json.dumps(plan))
+        )
+        self.db.commit()
+        return self.get_plan(chain_id, slot)
+
+    def get_plan(self, chain_id: str, slot: str) -> dict | None:
+        row = self.db.execute(
+            "SELECT body FROM plans WHERE chain_id=? AND slot=?", (chain_id, slot)
+        ).fetchone()
+        return json.loads(row[0]) if row else None
 
     # -- receipts
     def state(self, intent_id: str) -> str | None:

@@ -17,6 +17,7 @@ from bench.engine import (
     SystemConfig,
     digest_only,
     ours_at,
+    ours_persist,
     run_one,
 )
 from bench.faults import FaultPlan
@@ -35,6 +36,7 @@ def _config_runner(cfg: SystemConfig) -> Runner:
 _CONFIGS = [DEFAULT_SDK, REQUEST_ID, TEMPORAL, OURS, NO_INTENTS, NO_RESOLVE]
 _CONFIGS += [ours_at(g) for g in Granularity if g is not Granularity.MEDIUM]
 _CONFIGS += [digest_only(g) for g in Granularity]
+_CONFIGS += [ours_persist(Granularity.MEDIUM), ours_persist(Granularity.FINE)]
 
 SYSTEMS: dict[str, Runner] = {c.name: _config_runner(c) for c in _CONFIGS}
 SYSTEMS["saga"] = partial(run_saga)
@@ -49,6 +51,8 @@ ABLATIONS = (
     "digest_only_coarse",
     "digest_only_medium",
     "digest_only_fine",
+    "ours_medium_persist",
+    "ours_fine_persist",
 )
 
 LABELS = {
@@ -56,6 +60,8 @@ LABELS = {
     "saga": "Saga (single orchestrator with full view)",
     "default_sdk": "Default A2A SDK (retry)",
     "request_id": "Request-ID idempotency",
+    "ours_fine_persist": "Ours, fine digest + persisted plans (D29)",
+    "ours_medium_persist": "Ours, medium digest + persisted plans (D29)",
     "ours": "Ours (intents + receipts + resolveIntent)",
 }
 
