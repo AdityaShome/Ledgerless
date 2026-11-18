@@ -14,6 +14,8 @@ duplicate at p_replan 0 / 0.1 / 0.25 / 0.5 / 0.75 / 1.0 (`c1_replan_sweep.png`).
 every run of F4 (replica failover) regardless of re-planning. The default SDK duplicates on every
 retry scenario (F1 to F6).
 
+![Duplicates vs p_replan](figs/c1_replan_sweep.png)
+
 **C2. Ours has zero duplicate and zero lost effects on F1 to F6: SUPPORTED, with three conditions.**
 - With coarse or medium digests: 0 duplicates and 0 lost effects on F1 to F6 in every cell.
 - With a fine digest and no plan persistence, C2 FAILS on F5: `ours_fine` duplicates in 41.1% of
@@ -22,6 +24,8 @@ retry scenario (F1 to F6).
   beyond the guide, found by this evaluation.
 - Under a permanent resolve partition (F6 permanent) there are 0 duplicates and 0 lost effects
   because every run is quarantined (100%) and none completes. Safety holds, availability does not.
+
+![Duplicate effects by system and scenario](figs/duplicates_by_scenario.png)
 
 **C3. Ours matches the Temporal upper bound on correctness without a shared control plane:
 PARTIALLY SUPPORTED.**
@@ -44,6 +48,10 @@ No bound was fixed before running, so none is claimed.
 - Persisted plans store about 685 extra bytes per chain.
 - Latency is not measured. Messages per run (p50/p95) are used as a proxy (D30).
 
+![Overhead](figs/c4_overhead.png)
+
+![Cost under faults](figs/c4_cost_under_faults.png)
+
 ## Research questions
 
 - **RQ1** (duplicates and lost effects vs baselines): `duplicates_by_scenario.png`, tables in
@@ -52,11 +60,15 @@ No bound was fixed before running, so none is claimed.
   do not duplicate.
 - **RQ2** (what resolveIntent buys): `ours_no_resolve` never duplicates but quarantines every
   in-doubt call (0% completion on F1, F2, F4, F5, F6). `resolveIntent` is what restores completion.
+![Completion by system and scenario](figs/completion_by_scenario.png)
+
 - **RQ3** (non-deterministic re-execution): the C1 sweep and the fine-digest result above.
 - **RQ4** (digest granularity), `rq4_granularity.png`: coarse 48.0% false dedup / 0% missed;
   medium on amount only 19.9% / 0%; medium on the workload's true identity fields 0% / 0%; fine
   0% / 100%. The "right" medium policy matches the workload by construction (D27), so this shows
   the trade-off shape only.
+
+![RQ4 granularity](figs/rq4_granularity.png)
 
 ## Also observed
 

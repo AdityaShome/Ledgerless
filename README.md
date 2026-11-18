@@ -59,6 +59,21 @@ Claims under test (not assumed): C1 request-ID dedup duplicates grow with re-pla
 122 tests pass. Results are simulation results; see `results/summary.md` for which claims hold and the limits.
 Regenerate with `python -m bench.run all` then `python -m bench.metrics`.
 
+## Results
+
+Simulation results (500 seeds per cell). Claims, numbers and limits are in
+[`results/summary.md`](results/summary.md); all tables are in [`results/tables.md`](results/tables.md).
+
+![Duplicate effects by system and scenario](results/figs/duplicates_by_scenario.png)
+
+![Duplicates vs p_replan](results/figs/c1_replan_sweep.png)
+
+![RQ4 granularity](results/figs/rq4_granularity.png)
+
+Overhead and completion figures: [`overhead`](results/figs/c4_overhead.png),
+[`cost under faults`](results/figs/c4_cost_under_faults.png),
+[`completion`](results/figs/completion_by_scenario.png).
+
 ## Repository layout
 
 ```
