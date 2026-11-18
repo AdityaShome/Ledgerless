@@ -50,13 +50,14 @@ Claims under test (not assumed): C1 request-ID dedup duplicates grow with re-pla
 | 0 | Repo skeleton, pinned deps, CI | Done |
 | 1 | TLA+ model and TLC checking | Done (see caveats in `formal/results.md`) |
 | 2 | Core library: crypto, intents, receipts, store, `decide` | Done, 30 tests |
-| 3 | A2A integration: middleware, `resolveIntent`, agents A → B → C over HTTP | Next |
-| 4 | Fault injection (F1–F7) and toy re-planning agents | Planned |
-| 5 | Baselines: default SDK, request-ID idempotency, saga, Temporal (upper bound) | Planned |
-| 6 | Experiments and results | Planned |
-| 7 | Write-up support | Planned |
+| 3 | A2A integration: middleware, `resolveIntent`, agents A → B → C over HTTP | Done |
+| 4 | Fault injection (F1–F8) and toy re-planning agents | Done |
+| 5 | Baselines (default SDK, request-ID, saga, Temporal stand-in) and ablations | Done |
+| 6 | Experiments: grid, C1 sweep, RQ4, tables and figures in `results/` | Done |
+| 7 | `results/summary.md` and `related_work.md` | Done (citations still to verify) |
 
-No experimental results exist yet. The only checked results so far are the formal-model runs in `formal/results.md`.
+122 tests pass. Results are simulation results; see `results/summary.md` for which claims hold and the limits.
+Regenerate with `python -m bench.run all` then `python -m bench.metrics`.
 
 ## Repository layout
 
